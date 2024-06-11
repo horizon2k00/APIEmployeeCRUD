@@ -1,12 +1,15 @@
-const {getEmp} = require('./filterData.js');
+import {FilterData} from './filterData.js';
 // any data sent to this module needs to be saved to req.body or req object
-class Verify {
+
+export class Verify {
+
     static fs = require('fs');
     static path = require('path');
     static jwt = require('jsonwebtoken');
     static datapath = Verify.path.join(__dirname, '../DATA/data.json');
+
     // Middleware to check if employee datafile exists
-    static exists(req, res, next) {
+    static exists(req: any, res: { send: (arg0: string) => void; }, next: () => void):void {
         if (!Verify.fs.existsSync(Verify.datapath)) {
             res.send('no employee present in company');
         } else {
@@ -15,7 +18,7 @@ class Verify {
     }
 
     //Middleware Authorizes jwt token and saves payload into req.payload(useful to check email and access privileges)
-    static jwtAuth(req, res, next) {
+    static jwtAuth(req: { jwtPayload: any; get: (arg0: string) => any; }, res: { send: (arg0: string) => void; }, next: () => void):void {
         try {
             const secret = process.env.SECRET_KEY;
             req.jwtPayload = Verify.jwt.verify(req.get('Authorization'), secret);
@@ -27,12 +30,12 @@ class Verify {
     }
 
     // Normal static returns boolean based on jwt payload's 'privilege' key
-    static isAdmin(req) {
+    static isAdmin(req: { jwtPayload: { privilege: string; }; }): boolean {
         return req.jwtPayload.privilege === 'admin';
     }
 
     // Normal static (arg1, arg2, arg3||undefined), if arg3(can be 'admin' or 'personal'), checks if admin or if arg1.email === arg2.email else checks if either are true
-    static authorizedUser(payload, empData, specifyAuth) { //needs (req.payload, req.body)
+    static authorizedUser(payload: { privilege: string; email: any; }, empData: { email: any; }, specifyAuth?: string | number): boolean { //needs (req.payload, req.body)
         if (!specifyAuth) {
             specifyAuth = 1;
         }
@@ -50,20 +53,20 @@ class Verify {
     }
 
     // finds index of emp whose key:parameter matches "arg2":"arg3". Uses Arrays.findIndex()
-    static findEmp(emp, key, parameter) {
+    static findEmp(emp: any[], key: string, parameter: any):number {
         const index = emp.findIndex((e) => e[key] === parameter)
         return index;
     }
 
-    static verifyIndex(req,res,next){
+    static verifyIndex(req: { params: { id: string; }; },res: { id: number; employees: any[]; index: number; },next: any){
         res.id = parseInt(req.params.id);
-        res.employees = getEmp();
+        res.employees = FilterData.getEmp();
         res.index = Verify.findEmp(res.employees, 'empId', res.id);
         Verify.checkIndex(res.index, "Employee doesn't exist", res, next);
     }
     
     //checkIndex(arg1,arg2,arg3) checks for index === -1 and sends err response 'arg2' if true, else next();
-    static checkIndex(i, returnMsg, res, next) {
+    static checkIndex(i: number, returnMsg: string, res: { id?: number; employees?: any[]; index?: number; send?: any; }, next: () => void) {
         if (i !== -1) next();
         else {
             res.send(returnMsg);
@@ -71,7 +74,7 @@ class Verify {
     }
 
     // Middleware verifies jwt for admin privilege
-    static checkAdmin(req, res, next) {
+    static checkAdmin(req: { jwtPayload: { privilege: string; }; }, res: { send: (arg0: string) => void; }, next: () => void) {
         if (Verify.isAdmin(req)) {
             next();
         } else {
@@ -80,14 +83,14 @@ class Verify {
     }
 
     //Middleware verifies name
-    static verifyName(req, res, next) {
+    static verifyName(req: { body: { name: { charAt: (arg0: number) => number; }; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         if (!req.body.name) {
             if (res.updateRoute) {
                 next();
             } else {
                 res.send('Please enter name');
             }
-        } else if (req.body.name.charAt(0) <= '9') {
+        } else if (req.body.name.charAt(0) <= 57) {
             res.send('name must start with a letter');
         } else {
             next();
@@ -95,7 +98,7 @@ class Verify {
     }
 
     //Middleware verifies age
-    static verifyAge(req, res, next) {
+    static verifyAge(req: { body: { age: number; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         if (!req.body.age) {
             if (res.updateRoute) {
                 next();
@@ -112,7 +115,7 @@ class Verify {
     }
 
     //Middleware verifies password (uses regex matching)
-    static verifyPass(req, res, next) {
+    static verifyPass(req: { body: { password: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&^])[A-Za-z\d@.#$!%*?&]{8,30}$/;
         const pass = req.body.password;
         if (!pass) {
@@ -131,7 +134,7 @@ class Verify {
     }
 
     //Middleware verifies email(uses basic regex matching, true verification must be done by sending email and awaiting response at server)
-    static verifyEmail(req, res, next) {
+    static verifyEmail(req: any, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         const regex = /\S+@\S+\.\S+/;
         if (!req.body.email) {
             if (res.updateRoute) {
@@ -147,7 +150,7 @@ class Verify {
     }
 
     //Middleware verifies salary
-    static verifySal(req, res, next) {
+    static verifySal(req: { body: { salary: number; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         if (!req.body.salary) {
             if (res.updateRoute) {
                 next();
@@ -162,7 +165,7 @@ class Verify {
     }
 
     //Middleware verifies department
-    static verifyDep(req, res, next) {
+    static verifyDep(req: { body: { department: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         if (!req.body.department) {
             if (res.updateRoute) {
                 next();
@@ -177,7 +180,7 @@ class Verify {
     }
 
     //Middleware verifies position
-    static verifyPos(req, res, next) {
+    static verifyPos(req: { body: { position: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         if (!req.body.position) {
             if (res.updateRoute) {
                 next();
@@ -192,7 +195,7 @@ class Verify {
     }
 
     //Middleware verifies access privilege
-    static verifyPriv(req, res, next) {
+    static verifyPriv(req: { body: { privilege: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
         if (!req.body.privilege) {
             if (res.updateRoute) {
                 next();
@@ -207,7 +210,7 @@ class Verify {
     }
 
     //Middleware verifies employee rating
-    static verifyRating(req, res, next) {
+    static verifyRating(req: { body: { rating: number; }; }, res: { send: (arg0: string) => void; }, next: () => void) {
         if (!req.body.rating) {
             next();
         } else {
@@ -220,4 +223,4 @@ class Verify {
     }
 }
 
-module.exports = Verify;
+// module.exports = Verify;

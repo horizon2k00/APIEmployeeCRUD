@@ -1,10 +1,11 @@
-const express = require('express');
+// const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Verify = require('../modules/verifyData.js');
-const { exists, createEntry } = require('../modules/createModule.js');
+import {Verify} from '../modules/verifyData.js';
+import {CreateModule} from '../modules/createModule.js';
 
 //route to create new employee in file with given data
-router.post('/', exists, 
+router.post('/', CreateModule.exists, 
     Verify.verifyEmail, 
     Verify.verifyName, 
     Verify.verifyAge, 
@@ -13,7 +14,7 @@ router.post('/', exists,
     Verify.verifyPos, 
     Verify.verifySal, 
     Verify.verifyPriv, 
-    createEntry);
+    CreateModule.createEntry);
 
 
 // router.post('/many',exists,(req,res)=>{
