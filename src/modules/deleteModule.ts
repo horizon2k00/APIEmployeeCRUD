@@ -1,20 +1,5 @@
 import {FilterData} from  './filterData.js';
-// const { getEmp } = require('../modules/filterData.js');
-
-interface employee {
-    [index:string]:number|string;
-    empId:number;
-    name: string;
-    position: string;
-    department:string;
-    salary:number;
-    email:string;
-    password:string;
-    age:number;
-    privilege:string;
-    joinDate:string;
-    rating:number;
-}
+import { employee } from './typeDefinitions.js';
 
 export class DeleteModule {
     static fs = require('fs');
@@ -34,4 +19,3 @@ export class DeleteModule {
         res.send(`employee details deleted`);
     }
 }
-// module.exports = Module;

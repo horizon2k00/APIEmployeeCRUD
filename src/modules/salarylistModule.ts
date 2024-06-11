@@ -1,22 +1,5 @@
-// const { filterDept, objAverage, arrAverage, sortby, getEmp } = require('../modules/filterData');
 import { FilterData } from "./filterData";
-
-interface employee {
-    [index:string]:number|string;
-    empId:number;
-    name: string;
-    position: string;
-    department:string;
-    salary:number;
-    email:string;
-    password:string;
-    age:number;
-    privilege:string;
-    joinDate:string;
-    rating:number;
-}
-
-type numberKey = 'salary' | 'empId' | 'age' | 'rating'
+import { employee, numberKey } from "./typeDefinitions";
 
 export class SalaryModule {
     static path = require('path');
@@ -125,4 +108,3 @@ export class SalaryModule {
         res.send(`Max sal:${max}\nMin sal:${min}`);
     }
 }
-// module.exports = Module;

@@ -19,4 +19,3 @@ exports.DeleteModule = DeleteModule;
 DeleteModule.fs = require('fs');
 DeleteModule.path = require('path');
 DeleteModule.datapath = DeleteModule.path.join(__dirname, '../DATA/data.json');
-// module.exports = Module;

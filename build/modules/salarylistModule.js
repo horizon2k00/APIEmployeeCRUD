@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SalaryModule = void 0;
-// const { filterDept, objAverage, arrAverage, sortby, getEmp } = require('../modules/filterData');
 const filterData_1 = require("./filterData");
 class SalaryModule {
     //returns max of key in array 'a'
@@ -112,4 +111,3 @@ SalaryModule.path = require('path');
 SalaryModule.fs = require('fs');
 SalaryModule.csvjson = require('csvjson');
 SalaryModule.writepath = SalaryModule.path.join(__dirname, '/DATA/report.csv');
-// module.exports = Module;

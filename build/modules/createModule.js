@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateModule = void 0;
 const filterData_js_1 = require("./filterData.js");
-// const {getEmp} = require('./filterData.js');
 const verifyData_js_1 = require("./verifyData.js");
 class CreateModule {
     static exists(req, res, next) {
@@ -41,4 +40,3 @@ CreateModule.fs = require('fs');
 CreateModule.path = require('path');
 CreateModule.datapath = CreateModule.path.join(__dirname, '../DATA/data.json');
 CreateModule.bcrypt = require('bcrypt');
-// Createmodule.exports = CreateModule;

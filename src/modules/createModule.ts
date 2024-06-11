@@ -1,21 +1,6 @@
 import {FilterData} from  './filterData.js';
-// const {getEmp} = require('./filterData.js');
 import { Verify } from './verifyData.js';
-
-interface employee {
-    [index:string]:number|string;
-    empId:number;
-    name: string;
-    position: string;
-    department:string;
-    salary:number;
-    email:string;
-    password:string;
-    age:number;
-    privilege:string;
-    joinDate:string;
-    rating:number;
-}
+import { employee } from './typeDefinitions.js';
 
 export class CreateModule {
     
@@ -54,4 +39,3 @@ export class CreateModule {
         }
     }
 }
-// Createmodule.exports = CreateModule;
