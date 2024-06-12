@@ -9,16 +9,9 @@ const port = 3000;
 const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-// const { jwtAuth, exists, checkAdmin } = require('../modules/verifyData.js');
 const verifyData_1 = require("../modules/verifyData");
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-// const fs = require('fs');
-// const path = require('path');
-// const datapath = path.join(__dirname,'/DATA/data.json');
-// if(!fs.existsSync(datapath)){
-//     fs.writeFileSync(datapath,'[]');}
-//checks file exists and creates, not required anymore
 const adminRead = require('./adminRead.js');
 app.use('/emp', verifyData_1.Verify.jwtAuth, verifyData_1.Verify.exists, verifyData_1.Verify.checkAdmin, adminRead);
 const allRead = require('./allRead.js');

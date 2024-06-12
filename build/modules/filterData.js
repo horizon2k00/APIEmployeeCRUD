@@ -14,8 +14,8 @@ class FilterData {
     }
     // function takes emp array and dept name and returns array of objects whose department param is dept
     static filterDept(emp, dept) {
-        const a = emp.filter((e) => e.department === dept);
-        return a;
+        const filterArr = emp.filter((e) => e.department === dept);
+        return filterArr;
     }
     //array avg function takes emp array returns [a,b] where a is total and b is average in an array of numbers
     static arrAverage(emp) {
@@ -60,12 +60,21 @@ class FilterData {
     }
     //takes employee array, page and limit per page and returns array of employees in that page with specified limit
     static paginate(employees, pageNo, lim) {
-        let limit = parseInt(lim);
-        if (!limit) {
+        let limit = 0;
+        let page = 0;
+        if (typeof lim === 'string') {
+            limit = parseInt(lim);
+        }
+        else {
             limit = 5;
         }
-        let page = parseInt(pageNo);
-        if (!page || page < 1) {
+        if (typeof pageNo === 'string') {
+            page = parseInt(pageNo);
+        }
+        else {
+            page = 1;
+        }
+        if (page < 1) {
             page = 1;
         }
         if (page * limit > employees.length) {

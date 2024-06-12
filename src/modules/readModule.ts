@@ -1,37 +1,44 @@
 import { Verify } from './verifyData.js';
-import {FilterData} from './filterData.js'
-import { employee } from './typeDefinitions.js';
+import { FilterData } from './filterData.js'
+import { employee, Request, Response, Res, Req, changeLog } from './typeDefinitions.js';
+import { empHist } from './typeDefinitions.js';
 
 export class ReadModule {
 
     //Middleware sends emp details if authorized
-    static getId(req: { jwtPayload: { privilege: string; email: any; }; }, res: { employees: { [x: string]: employee; }; index: string | number; send: (arg0: string) => void; id: any; }) {
-        const emp:employee = res.employees[res.index];
+    static getId(req: Req, res: Res) {
+        const emp: employee = res.employees[res.index];
         if (Verify.authorizedUser(req.jwtPayload, emp)) res.send(`Employee id ${res.id} \n ${JSON.stringify(emp)}`);
         else res.send('Access Denied');
     }
 
     //Middleware sends count of emp in specified dept
-    static getDeptCount(req: { query: { name: string; }; }, res: { send: (arg0: string) => void; }) {
-        const employees = FilterData.getEmp();
-        const dept:string = req.query.name;
-        const a = FilterData.filterDept(employees, dept);
-        res.send(`Total employee count in the ${dept} department: ${a.length}`);
+    static getDeptCount(req: Request, res: Response) {
+        const employees: employee[] = FilterData.getEmp();
+        if (typeof req.query.name === 'string') {
+            const dept: string = req.query.name;
+            const filterArr: employee[] = FilterData.filterDept(employees, dept);
+            res.send(`Total employee count in the ${dept} department: ${filterArr.length}`);
+        } else {
+            res.send('Error, specify department');
+        }
     }
 
     //Middleware gets update history of specified id if authorized
-    static getIdHistory(req: { jwtPayload: { privilege: string; email: any; }; }, res: { employees: { [x: string]: any; }; index: string | number; id: number; send: (arg0: string) => void; }) {
-        const changeLog = FilterData.getChangeLogs();
+    static getIdHistory(req: Req, res: Res) {
+        const changeLog: changeLog[] = FilterData.getChangeLogs();
         if (Verify.authorizedUser(req.jwtPayload, res.employees[res.index])) {
-            const empLog = changeLog.filter(e => e.empId === res.id);
+            const empLog: changeLog[] = changeLog.filter(e => e.empId === res.id);
             empLog.sort((a, b) => b.updatedAt - a.updatedAt);
-            let updNo = empLog.length;
-            const empHist = res.employees[res.index];
+            const empHist: empHist = res.employees[res.index];
+            empHist.history = [];
             empLog.map(ele => {
                 const { updatedAt, after, before } = ele;
-                const dateObj = new Date(updatedAt);
-                const date = dateObj.toString();
-                empHist[`changeLog ${updNo--}`] = { updatedAt: date, after, before };
+                const dateObj:Date = new Date(updatedAt);
+                const date:string = dateObj.toString();
+                if (empHist.history) {
+                    empHist.history.push({ updatedAt: date, after, before });
+                }
             });
             res.send(`Data History:\n${JSON.stringify(empHist)}`);
         } else {
@@ -40,59 +47,79 @@ export class ReadModule {
     }
 
     //Middleware sends count of employees
-    static getTotalCount(req: any, res: { send: (arg0: string) => void; }) {
-        const employees = FilterData.getEmp();
+    static getTotalCount(req: Request, res: Response) {
+        const employees:employee[] = FilterData.getEmp();
         res.send(`Total employee count in the company: ${employees.length}`);
     }
 
     //Middleware sends paginated emp with rating less than specified number
-    static getEmpLtRating(req: { query: { rating: any; page: string; limit: string; }; }, res: { send: (arg0: string) => void; }) {
-        const employees = FilterData.getEmp();
-        const rating = req.query.rating;
-        const list = employees.filter(ele => ele.rating <= rating);
-        FilterData.sortby(list, 'rating', 1);
-        const returnList = FilterData.paginate(list, req.query.page, req.query.limit);
-        res.send(`Employees with rating above ${rating}:` + JSON.stringify(returnList));
+    static getEmpLtRating(req: Request, res: Response) {
+        const employees:employee[] = FilterData.getEmp();
+        if (typeof req.query.rating === 'string' && typeof req.query.page === 'string' && typeof req.query.limit === 'string') {
+            const rating = parseInt(req.query.rating);
+            const list:employee[] = employees.filter(ele => ele.rating <= rating);
+            FilterData.sortby(list, 'rating', 1);
+            const returnList:employee[] = FilterData.paginate(list, req.query.page, req.query.limit);
+            res.send(`Employees with rating below ${rating}:` + JSON.stringify(returnList));
+        } else {
+            res.send('provide all details')
+        }
     }
 
 
     //Middleware sends paginated emp with rating greater than specified number
-    static getEmpGtRating(req: { query: { rating: any; page: string; limit: string; }; }, res: { send: (arg0: string) => void; }) {
-        const employees = FilterData.getEmp();
-        const rating = req.query.rating;
-        const list = employees.filter(ele => ele.rating >= rating);
-        FilterData.sortby(list, 'rating', -1);
-        const returnList = FilterData.paginate(list, req.query.page, req.query.limit);
-        res.send(`Employees with rating above ${rating}:` + JSON.stringify(returnList));
+    static getEmpGtRating(req: Request, res: Response) {
+        const employees:employee[] = FilterData.getEmp();
+        if (typeof req.query.rating === 'string' && typeof req.query.page === 'string' && typeof req.query.limit === 'string') {
+            const rating = parseInt(req.query.rating);
+            const list:employee[] = employees.filter(ele => ele.rating >= rating);
+            FilterData.sortby(list, 'rating', -1);
+            const returnList:employee[] = FilterData.paginate(list, req.query.page, req.query.limit);
+            res.send(`Employees with rating above ${rating}:` + JSON.stringify(returnList));
+        } else {
+            res.send('provide all details')
+        }
     }
 
     //Middleware sends paginated list of emp in specified dept
-    static getEmpByDept(req: { query: { name: any; page: string; limit: string; }; }, res:{ send: (arg0: any) => void; }) {
-        const dept = req.query.name;
-        const employees = FilterData.getEmp();
-        const list = FilterData.filterDept(employees, dept);
-        const returnList = FilterData.paginate(list, req.query.page, req.query.limit);
-        res.send(returnList);
+    static getEmpByDept(req: Request, res: Response) {
+        if (typeof req.query.name === 'string' && typeof req.query.page === 'string' && typeof req.query.limit === 'string') {
+            const dept:string = req.query.name;
+            const employees:employee[] = FilterData.getEmp();
+            const list:employee[] = FilterData.filterDept(employees, dept);
+            const returnList:employee[] = FilterData.paginate(list, req.query.page, req.query.limit);
+            res.send(returnList);
+        } else {
+            res.send('provide all details')
+        }
     }
 
     //Middleware sends paginated emp list sorted by specified key
-    static getEmpSorted(req: { query: { param: any; order: string; page: string; limit: string; }; }, res:{ send: (arg0: any) => void; }) {
-        const param = req.query.param;
-        const order = parseInt(req.query.order);
-        let employees = FilterData.getEmp();
-        FilterData.sortby(employees, param, order);
-        const returnList = FilterData.paginate(employees, req.query.page, req.query.limit);
-        res.send(returnList);
+    static getEmpSorted(req: Request, res: Response) {
+        if (typeof req.query.param === 'string' && typeof req.query.order === 'string' && typeof req.query.limit === 'string' && typeof req.query.page === 'string') {
+            const param:string = req.query.param;
+            const order:number = parseInt(req.query.order);
+            let employees:employee[] = FilterData.getEmp();
+            FilterData.sortby(employees, param, order);
+            const returnList:employee[] = FilterData.paginate(employees, req.query.page, req.query.limit);
+            res.send(returnList);
+        } else {
+            res.send('provide all details')
+        }
     }
 
     //Middleware sends paginated list of emp if admin 
-    static getEmpList(req: { query: { page: string; limit: string; }; }, res:{ send: (arg0: any) => void; }) {
-        const employees = FilterData.getEmp();
+    static getEmpList(req: Request, res: Response) {
+        const employees:employee[] = FilterData.getEmp();
         if (employees.length === 0) {
             res.send('no employee present in company');
         } else {
-            const returnList = FilterData.paginate(employees, req.query.page, req.query.limit);
-            res.send(JSON.stringify(returnList));
+            if (typeof req.query.limit === 'string' && typeof req.query.page === 'string') {
+                const returnList:employee[] = FilterData.paginate(employees, req.query.page, req.query.limit);
+                res.send(JSON.stringify(returnList));
+            } else {
+                res.send('provide all details')
+            }
         }
     }
 }

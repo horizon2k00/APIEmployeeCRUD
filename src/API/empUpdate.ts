@@ -4,7 +4,10 @@ import { Verify } from '../modules/verifyData';
 import { UpdateModule } from '../modules/updateModule';
 
 // update route to update employee details
-router.put('/emp/:id', UpdateModule.setRoute, Verify.verifyIndex, UpdateModule.authorizeUser,
+router.put('/emp/:id', 
+      UpdateModule.setRoute, 
+      Verify.verifyIndex, 
+      UpdateModule.authorizeUser,
       Verify.verifyName,
       Verify.verifyAge,
       Verify.verifyEmail,
@@ -17,6 +20,10 @@ router.put('/emp/:id', UpdateModule.setRoute, Verify.verifyIndex, UpdateModule.a
       UpdateModule.update);
 
 // update route to update employee password
-router.put('/password', UpdateModule.passAuth, Verify.verifyPass, UpdateModule.verifyIndexByEmail, UpdateModule.updatePwd);
+router.put('/password', 
+      UpdateModule.passAuth, 
+      Verify.verifyPass, 
+      UpdateModule.verifyIndexByEmail, 
+      UpdateModule.updatePwd);
 
 module.exports = router;

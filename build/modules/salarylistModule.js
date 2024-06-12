@@ -49,7 +49,13 @@ class SalaryModule {
     }
     //sends top n employees by salary
     static getTop(req, res) {
-        let i = parseInt(req.query.number);
+        let i = 0;
+        if (typeof req.query.number === 'string') {
+            i = parseInt(req.query.number);
+        }
+        else {
+            i = 3;
+        }
         const emp = filterData_1.FilterData.getEmp();
         if (!i) {
             i = 1;
@@ -60,7 +66,6 @@ class SalaryModule {
         filterData_1.FilterData.sortby(emp, 'salary', -1);
         while (i < emp.length && emp[i].salary === emp[i - 1].salary) {
             i++;
-            console.log(i);
         }
         res.send(emp.slice(0, i));
     }
@@ -80,7 +85,6 @@ class SalaryModule {
         emp.map(e => {
             deptObj[e.department].push(e.salary);
         });
-        console.log(deptObj);
         const output = [];
         Object.keys(deptObj).forEach(key => {
             const avg = filterData_1.FilterData.arrAverage(deptObj[key]);
@@ -90,20 +94,30 @@ class SalaryModule {
     }
     //sends avg sal of specified dept
     static getAvgByDept(req, res) {
-        const dept = req.query.name;
-        const emp = filterData_1.FilterData.getEmp();
-        const deptList = filterData_1.FilterData.filterDept(emp, dept);
-        const avg = filterData_1.FilterData.objAverage(deptList, 'salary');
-        res.send(`Average salary in ${dept} department is $${avg[1].toFixed(2)}`);
+        if (typeof req.query.name === 'string') {
+            const dept = req.query.name;
+            const emp = filterData_1.FilterData.getEmp();
+            const deptList = filterData_1.FilterData.filterDept(emp, dept);
+            const avg = filterData_1.FilterData.objAverage(deptList, 'salary');
+            res.send(`Average salary in ${dept} department is $${avg[1].toFixed(2)}`);
+        }
+        else {
+            res.send('provide deptname');
+        }
     }
     //sends max and min sal of specified dept
     static getDeptMaxMin(req, res) {
-        const dept = req.query.name;
-        const emp = filterData_1.FilterData.getEmp();
-        const a = filterData_1.FilterData.filterDept(emp, dept);
-        const max = SalaryModule.findMax(a, 'salary');
-        const min = SalaryModule.findMin(a, 'salary');
-        res.send(`Max sal:${max}\nMin sal:${min}`);
+        if (typeof req.query.name === 'string') {
+            const dept = req.query.name;
+            const emp = filterData_1.FilterData.getEmp();
+            const filterArr = filterData_1.FilterData.filterDept(emp, dept);
+            const max = SalaryModule.findMax(filterArr, 'salary');
+            const min = SalaryModule.findMin(filterArr, 'salary');
+            res.send(`Max sal:${max}\nMin sal:${min}`);
+        }
+        else {
+            res.send('Provide deptname');
+        }
     }
 }
 exports.SalaryModule = SalaryModule;

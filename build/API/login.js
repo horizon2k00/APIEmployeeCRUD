@@ -11,7 +11,6 @@ const updateModule_js_1 = require("../modules/updateModule.js");
 function confirmPass(req, res) {
     bcrypt.compare(req.body.password, res.employees[res.index].password).then((result) => {
         if (result) {
-            // console.log(path.resolve(__dirname, '../.env'));
             const secretKey = process.env.SECRET_KEY;
             console.log(process.env.SECRET_KEY);
             const payload = {

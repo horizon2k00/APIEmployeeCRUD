@@ -1,3 +1,4 @@
+import { NextFunction, Payload, Req, Request, Res, Response, employee } from './typeDefinitions';
 import {FilterData} from './filterData.js';
 
 // any data sent to this module needs to be saved to req.body or req object
@@ -10,7 +11,7 @@ export class Verify {
     static datapath = Verify.path.join(__dirname, '../DATA/data.json');
 
     // Middleware to check if employee datafile exists
-    static exists(req: any, res: { send: (arg0: string) => void; }, next: () => void):void {
+    static exists(req: Request, res: Response, next: NextFunction):void {
         if (!Verify.fs.existsSync(Verify.datapath)) {
             res.send('no employee present in company');
         } else {
@@ -19,11 +20,15 @@ export class Verify {
     }
 
     //Middleware Authorizes jwt token and saves payload into req.payload(useful to check email and access privileges)
-    static jwtAuth(req: { jwtPayload: any; get: (arg0: string) => any; }, res: { send: (arg0: string) => void; }, next: () => void):void {
+    static jwtAuth(req: Req, res: Response, next: NextFunction):void {
         try {
-            const secret = process.env.SECRET_KEY;
-            req.jwtPayload = Verify.jwt.verify(req.get('Authorization'), secret);
-            next();
+            if(typeof process.env.SECRET_KEY === 'string'){
+                const secret:string = process.env.SECRET_KEY;
+                req.jwtPayload = Verify.jwt.verify(req.get('Authorization'), secret);
+                next();
+            }else{
+                throw new Error('environment variable missing, no secret key');
+            }
         } catch (err) {
             console.log(' ' + err);
             res.send('Your token is invalid');
@@ -31,12 +36,12 @@ export class Verify {
     }
 
     // Normal static returns boolean based on jwt payload's 'privilege' key
-    static isAdmin(req: { jwtPayload: { privilege: string; }; }): boolean {
+    static isAdmin(req: Req): boolean {
         return req.jwtPayload.privilege === 'admin';
     }
 
     // Normal static (arg1, arg2, arg3||undefined), if arg3(can be 'admin' or 'personal'), checks if admin or if arg1.email === arg2.email else checks if either are true
-    static authorizedUser(payload: { privilege: string; email: any; }, empData: { email: any; }, specifyAuth?: string | number): boolean { //needs (req.payload, req.body)
+    static authorizedUser(payload: Payload, empData: employee, specifyAuth?: string | number): boolean { //needs (req.payload, req.body)
         if (!specifyAuth) {
             specifyAuth = 1;
         }
@@ -54,12 +59,12 @@ export class Verify {
     }
 
     // finds index of emp whose key:parameter matches "arg2":"arg3". Uses Arrays.findIndex()
-    static findEmp(emp: any[], key: string, parameter: any):number {
-        const index = emp.findIndex((e) => e[key] === parameter)
+    static findEmp(emp: employee[], key: string, parameter: string|number):number {
+        const index:number = emp.findIndex((e) => e[key] === parameter)
         return index;
     }
 
-    static verifyIndex(req: { params: { id: string; }; },res: { id: number; employees: any[]; index: number; },next: any){
+    static verifyIndex(req: Request,res: Res, next: NextFunction){
         res.id = parseInt(req.params.id);
         res.employees = FilterData.getEmp();
         res.index = Verify.findEmp(res.employees, 'empId', res.id);
@@ -67,7 +72,7 @@ export class Verify {
     }
     
     //checkIndex(arg1,arg2,arg3) checks for index === -1 and sends err response 'arg2' if true, else next();
-    static checkIndex(i: number, returnMsg: string, res: { id?: number; employees?: any[]; index?: number; send?: any; }, next: () => void) {
+    static checkIndex(i: number, returnMsg: string, res: Res, next: NextFunction) {
         if (i !== -1) next();
         else {
             res.send(returnMsg);
@@ -75,7 +80,7 @@ export class Verify {
     }
 
     // Middleware verifies jwt for admin privilege
-    static checkAdmin(req: { jwtPayload: { privilege: string; }; }, res: { send: (arg0: string) => void; }, next: () => void) {
+    static checkAdmin(req: Req, res: Response, next: NextFunction) {
         if (Verify.isAdmin(req)) {
             next();
         } else {
@@ -84,7 +89,7 @@ export class Verify {
     }
 
     //Middleware verifies name
-    static verifyName(req: { body: { name: { charAt: (arg0: number) => number; }; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifyName(req: Request, res: Res, next: NextFunction) {
         if (!req.body.name) {
             if (res.updateRoute) {
                 next();
@@ -99,7 +104,7 @@ export class Verify {
     }
 
     //Middleware verifies age
-    static verifyAge(req: { body: { age: number; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifyAge(req: Request, res: Res, next: NextFunction) {
         if (!req.body.age) {
             if (res.updateRoute) {
                 next();
@@ -116,9 +121,9 @@ export class Verify {
     }
 
     //Middleware verifies password (uses regex matching)
-    static verifyPass(req: { body: { password: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifyPass(req: Request, res: Res, next: NextFunction) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&^])[A-Za-z\d@.#$!%*?&]{8,30}$/;
-        const pass = req.body.password;
+        const pass:string = req.body.password;
         if (!pass) {
             if (res.updateRoute) {
                 next();
@@ -135,7 +140,7 @@ export class Verify {
     }
 
     //Middleware verifies email(uses basic regex matching, true verification must be done by sending email and awaiting response at server)
-    static verifyEmail(req: any, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifyEmail(req: Request, res: Res, next: NextFunction) {
         const regex = /\S+@\S+\.\S+/;
         if (!req.body.email) {
             if (res.updateRoute) {
@@ -151,7 +156,7 @@ export class Verify {
     }
 
     //Middleware verifies salary
-    static verifySal(req: { body: { salary: number; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifySal(req: Request, res: Res, next: NextFunction) {
         if (!req.body.salary) {
             if (res.updateRoute) {
                 next();
@@ -166,7 +171,7 @@ export class Verify {
     }
 
     //Middleware verifies department
-    static verifyDep(req: { body: { department: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifyDep(req: Request, res: Res, next: NextFunction) {
         if (!req.body.department) {
             if (res.updateRoute) {
                 next();
@@ -181,7 +186,7 @@ export class Verify {
     }
 
     //Middleware verifies position
-    static verifyPos(req: { body: { position: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifyPos(req: Request, res: Res, next: NextFunction) {
         if (!req.body.position) {
             if (res.updateRoute) {
                 next();
@@ -196,7 +201,7 @@ export class Verify {
     }
 
     //Middleware verifies access privilege
-    static verifyPriv(req: { body: { privilege: string; }; }, res: { updateRoute: true | undefined; send: (arg0: string) => void; }, next: () => void) {
+    static verifyPriv(req: Request, res:Res, next: NextFunction) {
         if (!req.body.privilege) {
             if (res.updateRoute) {
                 next();
@@ -211,7 +216,7 @@ export class Verify {
     }
 
     //Middleware verifies employee rating
-    static verifyRating(req: { body: { rating: number; }; }, res: { send: (arg0: string) => void; }, next: () => void) {
+    static verifyRating(req: Request, res: Response, next: NextFunction) {
         if (!req.body.rating) {
             next();
         } else {
@@ -223,5 +228,3 @@ export class Verify {
         }
     }
 }
-
-// module.exports = Verify;

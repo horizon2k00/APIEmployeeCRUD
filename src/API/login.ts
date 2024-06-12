@@ -2,26 +2,12 @@ import express from "express";
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-import {UpdateModule} from '../modules/updateModule.js';
-interface employee {
-    [index:string]:number|string;
-    empId:number;
-    name: string;
-    position: string;
-    department:string;
-    salary:number;
-    email:string;
-    password:string;
-    age:number;
-    privilege:string;
-    joinDate:string;
-    rating:number;
-}
+import { UpdateModule } from '../modules/updateModule.js';
+import { Request, Res } from "../modules/typeDefinitions.js";
 
-function confirmPass (req: { body: { password: string; email: string; }; }, res: { employees: employee[]; index: number; append: (arg0: string, arg1: any) => void; send: (arg0: string) => void; }) {
+function confirmPass(req: Request, res: Res) {
     bcrypt.compare(req.body.password, res.employees[res.index].password).then((result: boolean) => {
         if (result) {
-            // console.log(path.resolve(__dirname, '../.env'));
             const secretKey = process.env.SECRET_KEY;
             console.log(process.env.SECRET_KEY);
             const payload = {

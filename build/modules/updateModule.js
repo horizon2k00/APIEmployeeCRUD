@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateModule = void 0;
-// const { authorizedUser, findEmp, checkIndex} = require('./verifyData.js');
 const verifyData_js_1 = require("./verifyData.js");
 const filterData_js_1 = require("./filterData.js");
 class UpdateModule {
@@ -27,48 +26,50 @@ class UpdateModule {
         const employees = filterData_js_1.FilterData.getEmp();
         const changeLog = filterData_js_1.FilterData.getChangeLogs();
         const ids = req.body;
-        let inc = parseInt(req.query.inc);
-        const updatedList = [];
-        employees.map((emp) => {
-            ids.map((id) => {
-                if (emp.empId === id) {
-                    const change = UpdateModule.createChangeLog(emp, changeLog);
-                    change.before[arg] = emp[arg];
-                    if (arg === "salary") {
-                        inc = (emp[arg] * inc) / 100;
-                        emp[arg] += inc;
-                    }
-                    else if (arg === "rating") {
-                        emp[arg] += inc;
-                        if (emp[arg] > 5) {
-                            emp[arg] = 5;
+        if (typeof req.query.inc === 'string') {
+            let inc = parseInt(req.query.inc);
+            const updatedList = [];
+            employees.map((emp) => {
+                ids.map((id) => {
+                    if (emp.empId === id) {
+                        const change = UpdateModule.createChangeLog(emp, changeLog);
+                        change.before[arg] = emp[arg];
+                        if (arg === "salary") {
+                            inc = (emp[arg] * inc) / 100;
+                            emp[arg] += inc;
                         }
-                        if (emp[arg] < 0) {
-                            emp[arg] = 0;
+                        else if (arg === "rating") {
+                            emp[arg] += inc;
+                            if (emp[arg] > 5) {
+                                emp[arg] = 5;
+                            }
+                            if (emp[arg] < 0) {
+                                emp[arg] = 0;
+                            }
                         }
+                        else if (arg === "age") {
+                            emp[arg] += inc;
+                        }
+                        change.after[arg] = emp[arg];
+                        change.updatedAt = Date.now();
+                        changeLog.push(change);
+                        updatedList.push({
+                            empId: emp.empId,
+                            name: emp.name,
+                            email: emp.email,
+                            [arg]: emp[arg],
+                        });
                     }
-                    else if (arg === "age") {
-                        emp[arg] += inc;
-                    }
-                    change.after[arg] = emp[arg];
-                    change.updatedAt = Date.now();
-                    changeLog.push(change);
-                    updatedList.push({
-                        empId: emp.empId,
-                        name: emp.name,
-                        email: emp.email,
-                        [arg]: emp[arg],
-                    });
-                }
+                });
             });
-        });
-        if (updatedList.length) {
-            UpdateModule.fs.writeFileSync(UpdateModule.datapath, JSON.stringify(employees));
-            UpdateModule.fs.writeFileSync(UpdateModule.changepath, JSON.stringify(changeLog));
-            res.send(updatedList);
-        }
-        else {
-            res.send("Employees with these ids do not exist");
+            if (updatedList.length) {
+                UpdateModule.fs.writeFileSync(UpdateModule.datapath, JSON.stringify(employees));
+                UpdateModule.fs.writeFileSync(UpdateModule.changepath, JSON.stringify(changeLog));
+                res.send(updatedList);
+            }
+            else {
+                res.send("Employees with these ids do not exist");
+            }
         }
     }
     //employee update middleware.
@@ -76,20 +77,17 @@ class UpdateModule {
         const emp = filterData_js_1.FilterData.getEmp();
         const changeLog = filterData_js_1.FilterData.getChangeLogs();
         let change = {
-            id: undefined,
+            id: 1,
             empId: parseInt(req.params.id),
             createdAt: Date.now(),
             before: {},
             after: {},
-            updatedAt: undefined,
+            updatedAt: 0,
         };
-        change.empId = parseInt(req.params.id);
-        change.createdAt = Date.now();
-        if (changeLog.length === 0) {
-            change.id = 1;
-        }
-        else {
-            change.id = changeLog[changeLog.length - 1].id + 1;
+        if (changeLog.length !== 0) {
+            if (typeof changeLog[changeLog.length - 1].id === 'number') {
+                change.id = changeLog[changeLog.length - 1].id + 1;
+            }
         }
         if (req.body.email) {
             const index = verifyData_js_1.Verify.findEmp(emp, "email", req.body.email);
@@ -183,7 +181,7 @@ class UpdateModule {
             createdAt: Date.now(),
             before: {},
             after: {},
-            updatedAt: undefined,
+            updatedAt: 0,
         };
         return change;
     }

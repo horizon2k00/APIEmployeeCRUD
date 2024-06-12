@@ -16,9 +16,14 @@ class Verify {
     //Middleware Authorizes jwt token and saves payload into req.payload(useful to check email and access privileges)
     static jwtAuth(req, res, next) {
         try {
-            const secret = process.env.SECRET_KEY;
-            req.jwtPayload = Verify.jwt.verify(req.get('Authorization'), secret);
-            next();
+            if (typeof process.env.SECRET_KEY === 'string') {
+                const secret = process.env.SECRET_KEY;
+                req.jwtPayload = Verify.jwt.verify(req.get('Authorization'), secret);
+                next();
+            }
+            else {
+                throw new Error('environment variable missing, no secret key');
+            }
         }
         catch (err) {
             console.log(' ' + err);
@@ -249,4 +254,3 @@ Verify.fs = require('fs');
 Verify.path = require('path');
 Verify.jwt = require('jsonwebtoken');
 Verify.datapath = Verify.path.join(__dirname, '../DATA/data.json');
-// module.exports = Verify;
